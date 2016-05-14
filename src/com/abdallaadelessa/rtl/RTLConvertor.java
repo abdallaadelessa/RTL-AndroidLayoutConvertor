@@ -46,6 +46,10 @@ import com.sun.org.apache.xerces.internal.impl.xs.opti.NodeImpl;
  * 
  */
 public class RTLConvertor {
+	private static final String HORIZONTAL = "horizontal";
+	private static final String ANDROID_ORIENTATION = "android:orientation";
+	private static final String LINEAR_LAYOUT = "LinearLayout";
+	private static final String GRAVITY = "gravity";
 	private static final boolean REVERSE_LINEARLAYOUT = true;
 	private static final Map<String, String> RTL_MAP = new HashMap<>();
 	static {
@@ -154,7 +158,6 @@ public class RTLConvertor {
 		return convertedLine;
 	}
 
-	
 	// ------------------------>
 
 	private static void convertXmlLinearLayouts(File srcFile, File destFile) {
@@ -163,15 +166,15 @@ public class RTLConvertor {
 					.newInstance();
 			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 			Document doc = docBuilder.parse(srcFile);
-			NodeList childNodes = doc.getElementsByTagName("LinearLayout");
+			NodeList childNodes = doc.getElementsByTagName(LINEAR_LAYOUT);
 			if (childNodes != null && childNodes.getLength() > 0) {
 				for (int i = 0; i < childNodes.getLength(); i++) {
 					Node item = childNodes.item(i);
 					NamedNodeMap attr = item.getAttributes();
-					Node nodeAttr = attr.getNamedItem("android:orientation");
+					Node nodeAttr = attr.getNamedItem(ANDROID_ORIENTATION);
 					if (nodeAttr == null
 							|| nodeAttr.getTextContent().equalsIgnoreCase(
-									"horizontal")) {
+									HORIZONTAL)) {
 						reverseChildren(item);
 					}
 				}
@@ -215,8 +218,12 @@ public class RTLConvertor {
 
 	private static String convertXmlAttrValue(String attrName, String attrValue) {
 		String convertedAttrValue = attrValue;
-		if (!Helper.isStringEmpty(attrValue) && attrValue.contains("|")) {
-			String[] gravityArray = attrValue.split("\\|");
+		if (!Helper.isStringEmpty(attrName) && !Helper.isStringEmpty(attrValue)
+				&& attrName.contains(GRAVITY)) {
+			String[] gravityArray = { attrValue };
+			if (attrValue.contains("|")) {
+				gravityArray = attrValue.split("\\|");
+			}
 			if (gravityArray != null) {
 				convertedAttrValue = "";
 				for (String gravity : gravityArray) {
@@ -230,7 +237,6 @@ public class RTLConvertor {
 		return convertedAttrValue;
 	}
 
-	
 	// ------------------------>
 
 	private static File getDestFile(File srcFile) throws IOException {
