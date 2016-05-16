@@ -1,5 +1,5 @@
 # RTL-LayoutConvertor
-A Tool created to convert any layout from LTR to RTL
+A Java tool created to convert any layout from LTR to RTL and viceversa
 
 ## Screenshot
 
