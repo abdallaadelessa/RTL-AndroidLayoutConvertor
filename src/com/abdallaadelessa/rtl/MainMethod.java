@@ -10,14 +10,16 @@ public class MainMethod {
 	public static void main(String[] args) {
 
 		try {
-			RTLConvertor.setMode(RTLConvertor.MODE_LTR);
+			RTLConvertor.setMode(RTLConvertor.MODE_RTL);
+			RTLConvertor.setGravitySupport(true);
+			RTLConvertor.setReverseLinearLayout(true);
 			RTLConvertor.addTextViewClass("com.linkdev.soutalkhaleej.views.customWidgets.TextViewWithMovingMarquee");
 			RTLConvertor.addTextViewClass("com.rengwuxian.materialedittext.MaterialEditText");
 			
-			String srcDir = "D:\\Workspace\\Projects\\LinkDev\\SoutAlKhaleeg\\app\\src\\main\\res\\layout";
-			String destDir = "D:\\Workspace\\Projects\\LinkDev\\SoutAlKhaleeg\\app\\src\\main\\res\\layout-ar";
-			RTLConvertor.convertXmlFiles(new File(srcDir).listFiles(),
-					new File(destDir));
+			String srcDir = "D:\\Workspace\\Projects\\LinkDev\\fta_android\\app\\src\\main\\res\\layout";
+			String destDir = "D:\\Workspace\\Projects\\LinkDev\\fta_android\\app\\src\\main\\res\\layout-ar";
+			RTLConvertor.convertXmlFiles(new File(srcDir),new File(destDir));
+			
 		} catch (Exception e) {
 			Helper.logError(e);
 		}

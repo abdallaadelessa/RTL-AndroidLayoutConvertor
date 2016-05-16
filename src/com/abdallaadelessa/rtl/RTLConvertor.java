@@ -56,17 +56,19 @@ public class RTLConvertor {
 	private static final String CENTER_HORIZONTAL = "center_horizontal";
 	private static final String CENTER = "center";
 	private static final String FRAME_LAYOUT = "FrameLayout";
-	private static final String UTF8 = "UTF8";
 	private static final String HORIZONTAL = "horizontal";
 	private static final String ANDROID_ORIENTATION = "android:orientation";
 	private static final String ANDROID_GRAVITY = "android:gravity";
 	private static final String ANDROID_LAYOUT_GRAVITY = "android:layout_gravity";
 	private static final String LINEAR_LAYOUT = "LinearLayout";
 	private static final String GRAVITY = "gravity";
+	private static final String UTF8 = "UTF8";
 	// ---->
 	public static final int MODE_RTL = 0;
 	public static final int MODE_LTR = 1;
 	private static int mode = MODE_RTL;
+	private static boolean gravitySupport = false;
+	private static boolean reverseLinearLayout = false;
 	private static Set<String> textViewClassNames = new HashSet<>();
 	private static Set<String> frameClassNames = new HashSet<>();
 	private static Set<String> linearLayoutClassNames = new HashSet<>();
@@ -93,6 +95,14 @@ public class RTLConvertor {
 		RTL_ATTR_MAP.put("paddingRight", "paddingLeft");
 		RTL_ATTR_MAP.put("paddingStart", "paddingEnd");
 		RTL_ATTR_MAP.put("paddingEnd", "paddingStart");
+		RTL_ATTR_MAP
+				.put("layout_marginEndPercent", "layout_marginStartPercent");
+		RTL_ATTR_MAP.put("layout_marginRightPercent",
+				"layout_marginLeftPercent");
+		RTL_ATTR_MAP
+				.put("layout_marginStartPercent", "layout_marginEndPercent");
+		RTL_ATTR_MAP.put("layout_marginLeftPercent",
+				"layout_marginRightPercent");
 		RTL_GRAVITY_MAP.put("left", "right");
 		RTL_GRAVITY_MAP.put("right", "left");
 		RTL_GRAVITY_MAP.put("start", "end");
@@ -111,6 +121,14 @@ public class RTLConvertor {
 
 	public static void setMode(int mode) {
 		RTLConvertor.mode = mode;
+	}
+
+	public static void setGravitySupport(boolean gravitySupport) {
+		RTLConvertor.gravitySupport = gravitySupport;
+	}
+
+	public static void setReverseLinearLayout(boolean reverseLinearLayout) {
+		RTLConvertor.reverseLinearLayout = reverseLinearLayout;
 	}
 
 	public static void addTextViewClass(String fullClassName) {
@@ -133,16 +151,16 @@ public class RTLConvertor {
 
 	// ------------------------>
 
-	public static String convertXmlFiles(File[] srcFiles, File destFolder)
+	public static String convertXmlFiles(File srcDir, File destDir)
 			throws Exception {
-		if (srcFiles != null) {
-			for (File file : srcFiles) {
+		if (srcDir != null) {
+			for (File file : srcDir.listFiles()) {
 				if (!file.isDirectory()) {
-					convertXmlFile(file, Helper.getDestFile(file, destFolder));
+					convertXmlFile(file, Helper.getDestFile(file, destDir));
 				}
 			}
 		}
-		return destFolder != null ? destFolder.getPath() : null;
+		return destDir != null ? destDir.getPath() : null;
 	}
 
 	public static String convertXmlFile(File srcFile, File destFile)
@@ -238,7 +256,7 @@ public class RTLConvertor {
 				Node orientationAttr = attr.getNamedItem(ANDROID_ORIENTATION);
 				if (orientationAttr == null
 						|| orientationAttr.getTextContent().equalsIgnoreCase(
-								HORIZONTAL)) {
+								HORIZONTAL) && reverseLinearLayout) {
 					reverseChildren(item);
 				}
 				// Add Gravity Support
@@ -276,8 +294,9 @@ public class RTLConvertor {
 	}
 
 	private static void addDirectionGravitySupport(String attrName, Node item) {
+		if (!gravitySupport)
+			return;
 		if (item != null && item.getNodeType() == Node.ELEMENT_NODE) {
-
 			Node GravityAttr = item.getAttributes() != null ? item
 					.getAttributes().getNamedItem(attrName) : null;
 			if (GravityAttr == null) {
