@@ -1,5 +1,5 @@
 # RTL-LayoutConvertor
-A Java tool created to save wasted time in converting any layout from LTR to RTL and viceversa with 80% accuracy 
+A Java tool created to save wasted time in converting any android layout from LTR to RTL and viceversa with 80% accuracy
 
 ## Screenshot
 
