@@ -4,17 +4,20 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,68 +49,116 @@ import com.sun.org.apache.xerces.internal.impl.xs.opti.NodeImpl;
  * 
  */
 public class RTLConvertor {
+	private static final String RADIO_GROUP = "RadioGroup";
+	private static final String PERCENT_FRAME_LAYOUT = "android.support.percent.PercentFrameLayout";
+	private static final String TEXT_VIEW = "TextView";
+	private static final String EDIT_TEXT = "EditText";
+	private static final String CENTER_HORIZONTAL = "center_horizontal";
+	private static final String CENTER = "center";
+	private static final String FRAME_LAYOUT = "FrameLayout";
+	private static final String UTF8 = "UTF8";
 	private static final String HORIZONTAL = "horizontal";
 	private static final String ANDROID_ORIENTATION = "android:orientation";
+	private static final String ANDROID_GRAVITY = "android:gravity";
+	private static final String ANDROID_LAYOUT_GRAVITY = "android:layout_gravity";
 	private static final String LINEAR_LAYOUT = "LinearLayout";
 	private static final String GRAVITY = "gravity";
-	private static final boolean REVERSE_LINEARLAYOUT = true;
-	private static final Map<String, String> RTL_MAP = new HashMap<>();
+	// ---->
+	public static final int MODE_RTL = 0;
+	public static final int MODE_LTR = 1;
+	private static int mode = MODE_RTL;
+	private static Set<String> textViewClassNames = new HashSet<>();
+	private static Set<String> frameClassNames = new HashSet<>();
+	private static Set<String> linearLayoutClassNames = new HashSet<>();
+	private static final Map<String, String> RTL_ATTR_MAP = new HashMap<>();
+	private static final Map<String, String> RTL_GRAVITY_MAP = new HashMap<>();
 	static {
-		RTL_MAP.put("layout_toRightOf", "layout_toLeftOf");
-		RTL_MAP.put("layout_toLeftOf", "layout_toRightOf");
-		RTL_MAP.put("layout_alignLeft", "layout_alignRight");
-		RTL_MAP.put("layout_alignRight", "layout_alignLeft");
-		RTL_MAP.put("layout_marginRight", "layout_marginLeft");
-		RTL_MAP.put("layout_marginLeft", "layout_marginRight");
-		RTL_MAP.put("layout_toEndOf", "layout_toStartOf");
-		RTL_MAP.put("layout_toStartOf", "layout_toEndOf");
-		RTL_MAP.put("layout_alignStart", "layout_alignEnd");
-		RTL_MAP.put("layout_alignEnd", "layout_alignStart");
-		RTL_MAP.put("layout_marginEnd", "layout_marginStart");
-		RTL_MAP.put("layout_marginStart", "layout_marginEnd");
-		RTL_MAP.put("layout_alignParentRight", "layout_alignParentLeft");
-		RTL_MAP.put("layout_alignParentLeft", "layout_alignParentRight");
-		RTL_MAP.put("layout_alignParentEnd", "layout_alignParentStart");
-		RTL_MAP.put("layout_alignParentStart", "layout_alignParentEnd");
-		RTL_MAP.put("paddingLeft", "paddingRight");
-		RTL_MAP.put("paddingRight", "paddingLeft");
-		RTL_MAP.put("paddingStart", "paddingEnd");
-		RTL_MAP.put("paddingEnd", "paddingStart");
-		RTL_MAP.put("left", "right");
-		RTL_MAP.put("right", "left");
-		RTL_MAP.put("start", "end");
-		RTL_MAP.put("end", "start");
+		RTL_ATTR_MAP.put("layout_toRightOf", "layout_toLeftOf");
+		RTL_ATTR_MAP.put("layout_toLeftOf", "layout_toRightOf");
+		RTL_ATTR_MAP.put("layout_alignLeft", "layout_alignRight");
+		RTL_ATTR_MAP.put("layout_alignRight", "layout_alignLeft");
+		RTL_ATTR_MAP.put("layout_marginRight", "layout_marginLeft");
+		RTL_ATTR_MAP.put("layout_marginLeft", "layout_marginRight");
+		RTL_ATTR_MAP.put("layout_toEndOf", "layout_toStartOf");
+		RTL_ATTR_MAP.put("layout_toStartOf", "layout_toEndOf");
+		RTL_ATTR_MAP.put("layout_alignStart", "layout_alignEnd");
+		RTL_ATTR_MAP.put("layout_alignEnd", "layout_alignStart");
+		RTL_ATTR_MAP.put("layout_marginEnd", "layout_marginStart");
+		RTL_ATTR_MAP.put("layout_marginStart", "layout_marginEnd");
+		RTL_ATTR_MAP.put("layout_alignParentRight", "layout_alignParentLeft");
+		RTL_ATTR_MAP.put("layout_alignParentLeft", "layout_alignParentRight");
+		RTL_ATTR_MAP.put("layout_alignParentEnd", "layout_alignParentStart");
+		RTL_ATTR_MAP.put("layout_alignParentStart", "layout_alignParentEnd");
+		RTL_ATTR_MAP.put("paddingLeft", "paddingRight");
+		RTL_ATTR_MAP.put("paddingRight", "paddingLeft");
+		RTL_ATTR_MAP.put("paddingStart", "paddingEnd");
+		RTL_ATTR_MAP.put("paddingEnd", "paddingStart");
+		RTL_GRAVITY_MAP.put("left", "right");
+		RTL_GRAVITY_MAP.put("right", "left");
+		RTL_GRAVITY_MAP.put("start", "end");
+		RTL_GRAVITY_MAP.put("end", "start");
+		RTL_ATTR_MAP.putAll(RTL_GRAVITY_MAP);
+		// ---->
+		textViewClassNames.add(TEXT_VIEW);
+		textViewClassNames.add(EDIT_TEXT);
+		frameClassNames.add(FRAME_LAYOUT);
+		frameClassNames.add(PERCENT_FRAME_LAYOUT);
+		linearLayoutClassNames.add(LINEAR_LAYOUT);
+		linearLayoutClassNames.add(RADIO_GROUP);
 	}
 
-	public static void convertXmlFiles(File[] srcFiles) {
-		if (srcFiles != null) {
-			for (File file : srcFiles) {
-				if (!file.isDirectory()) {
-					convertXmlFile(file);
-				}
-			}
+	// ------------------------>
+
+	public static void setMode(int mode) {
+		RTLConvertor.mode = mode;
+	}
+
+	public static void addTextViewClass(String fullClassName) {
+		if (!Helper.isStringEmpty(fullClassName)) {
+			textViewClassNames.add(fullClassName);
 		}
 	}
 
-	public static String convertXmlFile(File srcFile) {
-		boolean stepOneSuccess = false;
-		File destFile = null;
+	public static void addFrameLayoutClass(String fullClassName) {
+		if (!Helper.isStringEmpty(fullClassName)) {
+			frameClassNames.add(fullClassName);
+		}
+	}
+
+	public static void addLinearLayoutClass(String fullClassName) {
+		if (!Helper.isStringEmpty(fullClassName)) {
+			linearLayoutClassNames.add(fullClassName);
+		}
+	}
+
+	// ------------------------>
+
+	public static String convertXmlFiles(File[] srcFiles, File destFolder)
+			throws Exception {
+		if (srcFiles != null) {
+			for (File file : srcFiles) {
+				if (!file.isDirectory()) {
+					convertXmlFile(file, Helper.getDestFile(file, destFolder));
+				}
+			}
+		}
+		return destFolder != null ? destFolder.getPath() : null;
+	}
+
+	public static String convertXmlFile(File srcFile, File destFile)
+			throws Exception {
 		BufferedReader br = null;
 		BufferedWriter out = null;
 		try {
-			destFile = RTLConvertor.getDestFile(srcFile);
 			br = new BufferedReader(new InputStreamReader(new FileInputStream(
 					srcFile)));
 			out = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(destFile, false), "UTF8"));
+					new FileOutputStream(destFile, false), UTF8));
 			String strLine;
 			while ((strLine = br.readLine()) != null) {
 				out.write(convertXmlLine(strLine));
 				out.newLine();
 			}
-			stepOneSuccess = true;
-		} catch (Exception e) {
-			Helper.logError(e);
 		} finally {
 			try {
 				if (br != null) {
@@ -124,9 +175,7 @@ public class RTLConvertor {
 				Helper.logError(e);
 			}
 		}
-		if (stepOneSuccess && REVERSE_LINEARLAYOUT) {
-			convertXmlLinearLayouts(destFile, destFile);
-		}
+		updateXmlProperties(destFile, destFile);
 		return destFile != null ? destFile.getPath() : null;
 	}
 
@@ -160,28 +209,104 @@ public class RTLConvertor {
 
 	// ------------------------>
 
-	private static void convertXmlLinearLayouts(File srcFile, File destFile) {
-		try {
-			DocumentBuilderFactory docFactory = DocumentBuilderFactory
-					.newInstance();
-			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-			Document doc = docBuilder.parse(srcFile);
-			NodeList childNodes = doc.getElementsByTagName(LINEAR_LAYOUT);
-			if (childNodes != null && childNodes.getLength() > 0) {
-				for (int i = 0; i < childNodes.getLength(); i++) {
-					Node item = childNodes.item(i);
-					NamedNodeMap attr = item.getAttributes();
-					Node nodeAttr = attr.getNamedItem(ANDROID_ORIENTATION);
-					if (nodeAttr == null
-							|| nodeAttr.getTextContent().equalsIgnoreCase(
-									HORIZONTAL)) {
-						reverseChildren(item);
+	public static void updateXmlProperties(File srcFile, File destFile)
+			throws Exception {
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory
+				.newInstance();
+		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+		Document doc = docBuilder.parse(srcFile);
+		for (String className : linearLayoutClassNames) {
+			updateLinearLayout(doc, className);
+		}
+		for (String className : frameClassNames) {
+			updateFrameLayout(doc, className);
+		}
+		for (String className : textViewClassNames) {
+			updateNodeListGravity(doc.getElementsByTagName(className));
+		}
+		printXmlDocument(doc, destFile);
+	}
+
+	private static void updateLinearLayout(Document doc,
+			String linearLayoutClassName) {
+		NodeList nodes = doc.getElementsByTagName(linearLayoutClassName);
+		if (nodes != null && nodes.getLength() > 0) {
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Node item = nodes.item(i);
+				NamedNodeMap attr = item.getAttributes();
+				// Check Orientation
+				Node orientationAttr = attr.getNamedItem(ANDROID_ORIENTATION);
+				if (orientationAttr == null
+						|| orientationAttr.getTextContent().equalsIgnoreCase(
+								HORIZONTAL)) {
+					reverseChildren(item);
+				}
+				// Add Gravity Support
+				addDirectionGravitySupport(ANDROID_GRAVITY, item);
+			}
+		}
+	}
+
+	private static void updateFrameLayout(Document doc,
+			String frameLayoutClassName) {
+		NodeList nodes = doc.getElementsByTagName(frameLayoutClassName);
+		if (nodes != null && nodes.getLength() > 0) {
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Node item = nodes.item(i);
+				// Add Layout Gravity Support to children
+				if (item != null && item.getChildNodes() != null
+						&& item.getChildNodes().getLength() > 0) {
+					for (int j = 0; j < item.getChildNodes().getLength(); j++) {
+						Node childItem = item.getChildNodes().item(j);
+						addDirectionGravitySupport(ANDROID_LAYOUT_GRAVITY,
+								childItem);
 					}
 				}
 			}
-			printXmlDocument(doc, destFile);
-		} catch (Exception e) {
-			Helper.logError(e);
+		}
+	}
+
+	private static void updateNodeListGravity(NodeList nodes) {
+		if (nodes != null && nodes.getLength() > 0) {
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Node item = nodes.item(i);
+				addDirectionGravitySupport(ANDROID_GRAVITY, item);
+			}
+		}
+	}
+
+	private static void addDirectionGravitySupport(String attrName, Node item) {
+		if (item != null && item.getNodeType() == Node.ELEMENT_NODE) {
+
+			Node GravityAttr = item.getAttributes() != null ? item
+					.getAttributes().getNamedItem(attrName) : null;
+			if (GravityAttr == null) {
+				((Element) item).setAttribute(attrName,
+						mode == MODE_RTL ? "right|end" : "left|start");
+			} else {
+				List<String> gravityArray = new ArrayList<>(
+						Arrays.asList(getGravityArray(GravityAttr
+								.getTextContent())));
+				if (gravityArray != null && !gravityArray.contains(CENTER)
+						&& !gravityArray.contains(CENTER_HORIZONTAL)) {
+					boolean containsRightOrLeftGravity = false;
+					for (String gravity : gravityArray) {
+						if (RTL_GRAVITY_MAP.keySet().contains(gravity)) {
+							containsRightOrLeftGravity = true;
+						}
+					}
+					if (!containsRightOrLeftGravity) {
+						gravityArray.add(mode == MODE_RTL ? "left" : "right");
+						gravityArray.add(mode == MODE_RTL ? "start" : "end");
+						((Element) item)
+								.setAttribute(
+										attrName,
+										convertGravityArrayToString(gravityArray
+												.toArray(new String[gravityArray
+														.size()])));
+					}
+				}
+			}
 		}
 	}
 
@@ -213,45 +338,40 @@ public class RTLConvertor {
 	// ------------------------>
 
 	private static String convertXmlAttrName(String attrName) {
-		return RTL_MAP.containsKey(attrName) ? RTL_MAP.get(attrName) : attrName;
+		return RTL_ATTR_MAP.containsKey(attrName) ? RTL_ATTR_MAP.get(attrName)
+				: attrName;
 	}
 
 	private static String convertXmlAttrValue(String attrName, String attrValue) {
 		String convertedAttrValue = attrValue;
 		if (!Helper.isStringEmpty(attrName) && !Helper.isStringEmpty(attrValue)
 				&& attrName.contains(GRAVITY)) {
-			String[] gravityArray = { attrValue };
-			if (attrValue.contains("|")) {
-				gravityArray = attrValue.split("\\|");
-			}
-			if (gravityArray != null) {
-				convertedAttrValue = "";
-				for (String gravity : gravityArray) {
-					convertedAttrValue += (!Helper
-							.isStringEmpty(convertedAttrValue) ? "|" : "")
-							+ (RTL_MAP.containsKey(gravity) ? RTL_MAP
-									.get(gravity) : gravity);
-				}
+			convertedAttrValue = convertGravityArrayToString(getGravityArray(attrValue));
+		}
+		return convertedAttrValue;
+	}
+
+	private static String convertGravityArrayToString(String[] gravityArray) {
+		String convertedAttrValue = "";
+		if (gravityArray != null) {
+			for (String gravity : gravityArray) {
+				convertedAttrValue += (!Helper
+						.isStringEmpty(convertedAttrValue) ? "|" : "")
+						+ (RTL_ATTR_MAP.containsKey(gravity) ? RTL_ATTR_MAP
+								.get(gravity) : gravity);
 			}
 		}
 		return convertedAttrValue;
 	}
 
+	private static String[] getGravityArray(String attrValue) {
+		String[] gravityArray = { attrValue };
+		if (attrValue.contains("|")) {
+			gravityArray = attrValue.split("\\|");
+		}
+		return gravityArray;
+	}
+
 	// ------------------------>
 
-	private static File getDestFile(File srcFile) throws IOException {
-		// TODO Validate that the file has valid xml
-		String dirPath = srcFile.getParentFile().getPath() + File.separator
-				+ "layout-ar" + File.separator;
-		String destPath = dirPath + srcFile.getName();
-		File dirFile = new File(dirPath);
-		if (!dirFile.exists()) {
-			dirFile.mkdirs();
-		}
-		File destFile = new File(destPath);
-		if (!destFile.exists()) {
-			destFile.createNewFile();
-		}
-		return destFile;
-	}
 }
