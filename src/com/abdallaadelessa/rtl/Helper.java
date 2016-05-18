@@ -47,11 +47,10 @@ public class Helper {
 	static File getDestFile(File srcFile, File destFolder)
 			throws IOException {
 		String dirPath = destFolder.getPath() + File.separator;
-		String destPath = dirPath + srcFile.getName();
-		File dirFile = new File(dirPath);
-		if (!dirFile.exists()) {
-			dirFile.mkdirs();
+		if (!destFolder.exists()) {
+			destFolder.mkdirs();
 		}
+		String destPath = dirPath + srcFile.getName();
 		File destFile = new File(destPath);
 		if (!destFile.exists()) {
 			destFile.createNewFile();

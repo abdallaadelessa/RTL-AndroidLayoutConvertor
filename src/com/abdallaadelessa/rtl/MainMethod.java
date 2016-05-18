@@ -11,7 +11,6 @@ public class MainMethod {
 
 		try {
 			RTLConvertor.setMode(RTLConvertor.MODE_RTL);
-			RTLConvertor.setGravitySupport(true);
 			RTLConvertor.setReverseLinearLayout(true);
 			RTLConvertor.addTextViewClass("com.linkdev.soutalkhaleej.views.customWidgets.TextViewWithMovingMarquee");
 			RTLConvertor.addTextViewClass("com.rengwuxian.materialedittext.MaterialEditText");
