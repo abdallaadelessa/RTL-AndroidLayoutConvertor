@@ -1,4 +1,4 @@
-package com.abdallaadelessa.rtl;
+package com.abdallaadelessa.rtl.lib;
 
 public class MessageException extends Exception {
 	private String code;

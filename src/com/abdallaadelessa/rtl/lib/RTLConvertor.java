@@ -1,4 +1,4 @@
-package com.abdallaadelessa.rtl;
+package com.abdallaadelessa.rtl.lib;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

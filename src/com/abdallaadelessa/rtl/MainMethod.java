@@ -2,6 +2,9 @@ package com.abdallaadelessa.rtl;
 
 import java.io.File;
 
+import com.abdallaadelessa.rtl.lib.Helper;
+import com.abdallaadelessa.rtl.lib.RTLConvertor;
+
 public class MainMethod {
 
 	/**
