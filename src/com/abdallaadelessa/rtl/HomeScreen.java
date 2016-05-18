@@ -133,14 +133,14 @@ public class HomeScreen {
 		frame = new JFrame();
 		frame.setResizable(false);
 		frame.setModalExclusionType(ModalExclusionType.APPLICATION_EXCLUDE);
-		frame.setBounds(100, 100, 608, 254);
+		frame.setBounds(100, 100, 724, 254);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		JLabel lblNewLabel = new JLabel(
 				"<html>A Java tool created to save wasted time in converting any android layout from LTR to RTL and viceversa</html>");
 		lblNewLabel.setHorizontalAlignment(SwingConstants.TRAILING);
 
-		JLabel lblSrc = new JLabel("Source Path");
+		JLabel lblSrc = new JLabel("Source Path (Folder or File)");
 
 		txtSrc = new JTextField();
 		txtSrc.setColumns(10);
@@ -233,8 +233,8 @@ public class HomeScreen {
 
 		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
 		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+			groupLayout.createParallelGroup(Alignment.TRAILING)
+				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(26)
 					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
 						.addComponent(lblNewLabel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
@@ -244,14 +244,14 @@ public class HomeScreen {
 								.addComponent(lblDestinationPath, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 							.addPreferredGap(ComponentPlacement.UNRELATED)
 							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-								.addComponent(txtSrc, 319, 319, 319)
 								.addComponent(txtDest, GroupLayout.DEFAULT_SIZE, 319, Short.MAX_VALUE)
 								.addGroup(groupLayout.createSequentialGroup()
 									.addComponent(cbReverse, GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
 									.addPreferredGap(ComponentPlacement.RELATED)
 									.addComponent(comboBoxMode, GroupLayout.PREFERRED_SIZE, 67, GroupLayout.PREFERRED_SIZE)
 									.addGap(34)
-									.addComponent(btnStart, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+									.addComponent(btnStart, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+								.addComponent(txtSrc, GroupLayout.DEFAULT_SIZE, 435, Short.MAX_VALUE))
 							.addPreferredGap(ComponentPlacement.UNRELATED)
 							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
 								.addComponent(button, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
