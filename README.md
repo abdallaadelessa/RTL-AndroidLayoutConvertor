@@ -1,5 +1,7 @@
 # RTL-AndroidLayoutConvertor
-A Java tool created to save wasted time in converting any android layout from LTR to RTL and viceversa
+A Java tool created to save wasted time in converting any android layout from LTR to RTL and vice versa specially when targeting android versions below 4.2 (before RTL support)
+
+Any contributions are mostly welcomed :)
 
 ## Screenshot
 
