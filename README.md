@@ -1,6 +1,9 @@
 # RTL-AndroidLayoutConvertor
 A Java tool created to save wasted time in converting any android layout from LTR to RTL and vice versa specially when targeting android versions below 4.2 (before RTL support)
 
+Simply it reads and rewrite the whole xml file in RTL Mode
+It can convert the whole Layout folder to Layout-ar in just one second
+
 Any contributions are most welcomed :)
 
 ## Screenshot
